@@ -8,8 +8,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.Random;
-
 @Getter
 @Entity
 @NoArgsConstructor
@@ -29,21 +27,24 @@ public class ShortenUrl {
         this.redirectCount = 0L;
     }
 
-
-    public static String generateShortenUrlKey() {
-        String base56Characters = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz";
-        Random random = new Random();
+    public static String generateShortenUrlKey(Long id) {
+        String base62Characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         StringBuilder shortenUrlKey = new StringBuilder();
-
-        for (int count = 0; count < 8; count++) {
-            int base56CharactersIndex = random.nextInt(0, base56Characters.length());
-            char base56Character = base56Characters.charAt(base56CharactersIndex);
-            shortenUrlKey.append(base56Character);
+        
+        if (id == 0) {
+            return "0";
         }
+        
+        while (id > 0) {
+            int remainder = (int) (id % 62);
+            shortenUrlKey.insert(0, base62Characters.charAt(remainder));
+            id = id / 62;
+        }
+        
         return shortenUrlKey.toString();
     }
+
     public void increaseRedirectCount() {
         this.redirectCount = this.redirectCount + 1;
     }
-
 }

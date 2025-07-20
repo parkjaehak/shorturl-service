@@ -11,4 +11,5 @@ import java.util.Optional;
 @Qualifier("jpaRepository")
 public interface ShortenUrlRepository extends JpaRepository<ShortenUrl, Long>, ShortenUrlRepositoryInterface {
     Optional<ShortenUrl> findByShortenUrlKey(String shortenUrlKey);
+    Optional<ShortenUrl> findByOriginalUrl(String originalUrl);
 }

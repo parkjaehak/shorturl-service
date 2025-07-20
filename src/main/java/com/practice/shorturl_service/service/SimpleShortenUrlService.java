@@ -21,14 +21,36 @@ public class SimpleShortenUrlService {
             ShortenUrlCreateRequestDto shortenUrlCreateRequestDto
     ) {
         String originalUrl = shortenUrlCreateRequestDto.getOriginalUrl();
-        String shortenUrlKey = ShortenUrl.generateShortenUrlKey();
-
+        
+        // 2. 데이터베이스에 해당 URL이 있는지 검사
+        // 3. 데이터베이스에 있다면 해당 URL에 대한 단축 URL을 가져와서 반환
+        ShortenUrl existingShortenUrl = shortenUrlRepository.findByOriginalUrl(originalUrl)
+                .orElse(null);
+        
+        if (existingShortenUrl != null) {
+            return new ShortenUrlCreateResponseDto(existingShortenUrl);
+        }
+        
+        // 4. 데이터베이스에 없는 경우 새로운 레코드 생성 (ID는 자동 생성됨)
         ShortenUrl shortenUrl = ShortenUrl.builder()
                 .originalUrl(originalUrl)
-                .shortenUrlKey(shortenUrlKey)
+                .shortenUrlKey("") // 임시값, ID 생성 후 업데이트
                 .build();
         
         ShortenUrl savedShortenUrl = shortenUrlRepository.save(shortenUrl);
+        
+        // 5. 62진법 변환을 적용하여 ID를 단축 URL로 변환
+        String shortenUrlKey = ShortenUrl.generateShortenUrlKey(savedShortenUrl.getId());
+        
+        // 6. 단축 URL 키를 업데이트
+        savedShortenUrl = ShortenUrl.builder()
+                .id(savedShortenUrl.getId())
+                .originalUrl(savedShortenUrl.getOriginalUrl())
+                .shortenUrlKey(shortenUrlKey)
+                .redirectCount(savedShortenUrl.getRedirectCount())
+                .build();
+        
+        savedShortenUrl = shortenUrlRepository.save(savedShortenUrl);
 
         ShortenUrlCreateResponseDto shortenUrlCreateResponseDto = new ShortenUrlCreateResponseDto(savedShortenUrl);
         return shortenUrlCreateResponseDto;
